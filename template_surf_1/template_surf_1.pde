@@ -35,7 +35,11 @@ void draw() {
   line(0, 0, 0, 0, 0, width/2);
 
   S.drawSurface();
+  float volumeBefore = S.calcVolume();
   S.harmonicFlow();
+  //fill(0, 0, 153, 51);
+  //text("Volume : ", S.calcVolume(), -width/2+100, height/2-100);
+  S.homothety(S.center(), pow(volumeBefore/S.calcVolume(), 1/3.0));
 }
 
 void mouseWheel(MouseEvent event) {  // for zooming in and out
@@ -186,10 +190,16 @@ class Surface {
         gc.add(positions.get(neighbours.get(i)));
     }
     if(neighbours.size() == 0) {
-      println("No neigbours. Impossible!!!");
       return new PVector();
     }
     return gc.div(neighbours.size());
+  }
+  
+  PVector center() {    // returns the center of mass 
+    int n = positions.size();
+    PVector g = new PVector(0,0);
+    for(int i=0; i<n; i++) g.add(positions.get(i));
+    return(g.div(n));
   }
   
   void harmonicFlow() {
@@ -227,11 +237,8 @@ class Surface {
       PVector v0 = positions.get(f.vertices.get(0));
       PVector v1 = positions.get(f.vertices.get(1));
       PVector v2 = positions.get(f.vertices.get(2));
-      //PVector v3 = positions.get(f.vertices.get(3));
       PVector p = PVector.sub(v1, v0);
       PVector q = PVector.sub(v2, v0);
-      //PVector r = PVector.sub(v3, v0);
-      //println(Volume(p, q, r));
       PVector cross =  new PVector();
       PVector.cross(p, q, cross);
       PVector N = PVector.div(cross, l2Norm(cross));
@@ -239,6 +246,14 @@ class Surface {
       vol += PVector.dot(v0, N) * faceArea(f, N);
     }
     return vol / 3;
+  }
+  
+  void homothety(PVector center, float ratio) {
+    int n = positions.size();
+    PVector temp = center.copy().mult(1-ratio);
+    for(int i=0; i<n; i++) {
+      positions.get(i).mult(ratio).add(temp);
+    }
   }
 }
 
@@ -264,18 +279,10 @@ void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
   int n = f.vertices.size();
   PVector p;
   beginShape();
-  //println(f);
   for (int i=0; i<n; i++) {
     int vertexIndex = f.vertices.get(i);
     p = S.positions.get(vertexIndex);
-    //println(p);
     vertex(p.x, p.y, p.z);
   }
   endShape();
-}
-
-float Volume(PVector p, PVector q, PVector r) {
-  PVector cross =  new PVector();
-  PVector.cross(q, r, cross);
-  return PVector.dot(p, cross) / 6;
 }
