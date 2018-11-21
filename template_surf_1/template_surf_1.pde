@@ -253,13 +253,8 @@ void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
   endShape();
 }
 
-float arcAngle(PVector v1, PVector v2) {
-  float r = atan2(v2.y, v2.x) - atan2(v1.y, v1.x);
-  if (r<-PI) {
-    r += 2*PI;
-  }
-  if (r>PI) {
-    r -= 2*PI;
-  }
-  return(r);
+float Volume(PVector p, PVector q, PVector r) {
+  PVector cross =  new PVector();
+  PVector.cross(q, r, cross);
+  return PVector.dot(p, cross);
 }
