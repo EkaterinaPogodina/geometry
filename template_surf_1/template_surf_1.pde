@@ -1,16 +1,13 @@
 /*
-Managing polyhedral surfaces using half-edge, list based discrete surface representation 
- 
- v1
- - defines Face and Surface class
- - imports PLY files 
- - draws a surface by listing all faces and calling drawFace 
- - drawFace draws a face using Processing3D builtin routines (Shape)
- - mousewheel defines camera zoom, mouse motion defines camera rotation
- 
- Pascal Romon 2018 
- */
-
+Authors:
+  Pogodina Ekaterina and Pavlova ELena
+  
+We  added: 
+ - 2 methods for getting neighbours of a vertex: getNeighbours, getOrderedNeighbours (using Faces orientions and getFaceOrientation)
+ - method harmonicFlow, which applyes vector flow at each vertex p : q-p, where q - gravity of the neighbors, counted using gravityCenter() method
+ - method for computing Volume: calcVolume(), using additional method faceArea()
+ - method homothety() for preserving volume with respect to mass center, it's calling in draw() function (as hormonicFlow)
+*/
 
 int nVmax = 4000;
 int nFmax = 4000;
@@ -37,8 +34,7 @@ void draw() {
   S.drawSurface();
   float volumeBefore = S.calcVolume();
   S.harmonicFlow();
-  //fill(0, 0, 153, 51);
-  //text("Volume : ", S.calcVolume(), -width/2+100, height/2-100);
+  //Applying homothety for preserving volume with ratio of changing volume in power of 1/3
   S.homothety(S.center(), pow(volumeBefore/S.calcVolume(), 1/3.0));
 }
 
@@ -139,6 +135,7 @@ class Surface {
     }
   }
   
+  /*Function which returns neighbours of the vertex without order on them*/
   IntList getNeighbours(int vertex) {
     IntList neighbours = new IntList();
     for (int i = 0; i < nV; ++i) {
@@ -149,6 +146,7 @@ class Surface {
     return neighbours;
   }
   
+  /*Function which checks if the 3 vertices are in the face order (as in ply file)*/
   boolean getFaceOrientation(int vertex, int neighb1, int neighb2) {
     for (int i = 0; i < faces.size(); ++i) {
       IntList face = faces.get(i).vertices;
@@ -162,6 +160,10 @@ class Surface {
     return false;
   }
   
+  /*Function which returns neighbours of the vertex with order on them:
+    - calls previous one
+    - orders neigbours according faces orientation (for each neighbour we are looking for the next one with right face orientation)
+  */
   IntList getOrderedNeighbours(int vertex) {
     IntList neighbours = getNeighbours(vertex);
     IntList orderedNeighbours = new IntList();
@@ -183,9 +185,8 @@ class Surface {
     return orderedNeighbours;
   }
   
-  
   /*
-    Function calculates gravity center of vertex neighbours
+    Function calculates gravity center of vertex's neighbours
   */
   PVector gravityCenter(int vertex) {
     IntList neighbours = getNeighbours(vertex);
@@ -199,7 +200,8 @@ class Surface {
     return gc.div(neighbours.size());
   }
   
-  PVector center() {    // returns the center of mass 
+  // Function calculates the center of mass of all vertices
+  PVector center() {    
     int n = positions.size();
     PVector g = new PVector(0,0);
     for(int i=0; i<n; i++) g.add(positions.get(i));
@@ -207,7 +209,7 @@ class Surface {
   }
   
   /*
-    function that calculates flow
+    Function that calculates flow, as p - q, where q - is gravityCenter
   */
   void harmonicFlow() {
     float tau = 0.001; // coefficient of flow
@@ -219,12 +221,11 @@ class Surface {
       q = gravityCenter(i);
       flow = PVector.add(p, PVector.mult(PVector.sub(q, p), tau));
       positions.set(i, new PVector(flow.x, flow.y, flow.z));
-      println(abs(calcVolume()));
     }
   }
   
   /*
-    Function calculates Face area
+    Function calculates area of the Face, using normal vector N
   */
   float faceArea(Face f, PVector N) {
       PVector sumV = new PVector();
@@ -237,12 +238,12 @@ class Surface {
         }
         sumV.add(cross);
       }
-      return PVector.dot(N, sumV) / 2;
+      return PVector.dot(N, sumV);
   }
   
   
   /*
-    function that calculates volume of polyhedron as sum over all (triangular) faces (pqr) of (1/6) det(p,q,r)
+    function that calculates volume of the polyhedron as sum over all (triangular) faces (pqr) of (1/6) det(p,q,r)
   */
   float calcVolume() {
     float vol = 0;
@@ -259,9 +260,12 @@ class Surface {
       
       vol += PVector.dot(v0, N) * faceArea(f, N);
     }
-    return vol / 3;
+    return vol / 6;
   }
   
+  /*
+  Homothety function for preserving the Volume
+  */
   void homothety(PVector center, float ratio) {
     int n = positions.size();
     PVector temp = center.copy().mult(1-ratio);
