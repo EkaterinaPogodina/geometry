@@ -7,8 +7,6 @@ property float32 y
 property float32 z
 element face 6
 property list uint8 int32 vertex_indices
-element pyramid 6
-property list int32 vertex_indices_for_pyramid
 end_header
 -1 -1 -1 
 1 -1 -1 

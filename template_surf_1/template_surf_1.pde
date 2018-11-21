@@ -59,12 +59,11 @@ class Face {
 }
 
 class Surface {
-  int nV, nE, nF, nP;   // number of vertices, edges, faces and piramides
+  int nV, nE, nF;   // number of vertices, edges and faces
   ArrayList<PVector> positions = new ArrayList<PVector>();
   ArrayList<Face> faces = new ArrayList<Face>();
   boolean[][] incidenceVF = new boolean[nVmax][nFmax]; // true iff v is in f 
   boolean[][] adjacency = new boolean[nVmax][nVmax]; // true iff v1 ~ v2 
-  ArrayList<IntList> pyramids = new ArrayList<IntList>();
 
   void drawSurface() {
     int i;
@@ -99,8 +98,6 @@ class Surface {
           this.nV = int(keywords[2]);
         } else if (keywords[1].equals("face")) {
           this.nF = int(keywords[2]);
-        } else if(keywords[1].equals("pyramid")) {
-          this.nP = int(keywords[2]);
         }
       } else if (keywords[0].equals("end_header")) {
         end_header = true;
@@ -136,20 +133,6 @@ class Surface {
       this.faces.add(f);
       i++;
     }
-    
-    // pyramid's indexes 
-    for (int j=0; j< this.nP; j++) {  // j is the pyramid index
-      String[] keywords = split(lines[i], ' ');
-      IntList indexes = new IntList();
-      int pyramidSize = 4;
-      for (int k = 0; k < pyramidSize; k++) {
-        int vIndex = int(keywords[k]);
-        indexes.append(vIndex);
-      }
-      pyramids.add(indexes); 
-      i++;
-    }
-    //println(pyramids);
   }
   
   IntList getNeighbours(int vertex) {
@@ -219,27 +202,51 @@ class Surface {
       q = gravityCenter(i);
       flow = PVector.add(p, PVector.mult(PVector.sub(q, p), tau));
       positions.set(i, new PVector(flow.x, flow.y, flow.z));
+      println(abs(calcVolume()));
     }
+  }
+  
+  float faceArea(Face f, PVector N) {
+      PVector sumV = new PVector();
+      PVector cross =  new PVector();
+      for(int j = 0; j < f.vertices.size(); j++) {
+        if(j == f.vertices.size() - 1){ 
+          PVector.cross(positions.get(f.vertices.get(j)), positions.get(f.vertices.get(0)), cross);
+        } else {
+          PVector.cross(positions.get(f.vertices.get(j)), positions.get(f.vertices.get(j+1)), cross);
+        }
+        sumV.add(cross);
+      }
+      return PVector.dot(N, sumV) / 2;
   }
   
   float calcVolume() {
     float vol = 0;
-    for (int i = 0; i < pyramids.size(); ++i) {
-      PVector v0 = positions.get(pyramids.get(i).get(0));
-      PVector v1 = positions.get(pyramids.get(i).get(1));
-      PVector v2 = positions.get(pyramids.get(i).get(2));
-      PVector v3 = positions.get(pyramids.get(i).get(3));
+    for (int i = 0; i < nF; ++i) {
+      Face f = faces.get(i);
+      PVector v0 = positions.get(f.vertices.get(0));
+      PVector v1 = positions.get(f.vertices.get(1));
+      PVector v2 = positions.get(f.vertices.get(2));
+      //PVector v3 = positions.get(f.vertices.get(3));
       PVector p = PVector.sub(v1, v0);
       PVector q = PVector.sub(v2, v0);
-      PVector r = PVector.sub(v3, v0);
-      println(Volume(p, q, r));
-      vol += Volume(p, q, r);
+      //PVector r = PVector.sub(v3, v0);
+      //println(Volume(p, q, r));
+      PVector cross =  new PVector();
+      PVector.cross(p, q, cross);
+      PVector N = PVector.div(cross, l2Norm(cross));
+      
+      vol += PVector.dot(v0, N) * faceArea(f, N);
     }
-    return vol;
+    return vol / 3;
   }
 }
 
 //////   SUBS
+
+float l2Norm(PVector v) {
+  return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
+}
 
 void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
   // draws face # faceIndex in surface S
