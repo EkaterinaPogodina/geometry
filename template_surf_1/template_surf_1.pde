@@ -35,7 +35,8 @@ void draw() {
   line(0, 0, 0, 0, 0, width/2);
 
   S.drawSurface();
-  println(S.getOrderedNeighbours(0));
+  //println(S.getOrderedNeighbours(0));
+  S.harmonicFlow();
 
 }
 
@@ -60,11 +61,12 @@ class Face {
 }
 
 class Surface {
-  int nV, nE, nF;   // number of vertices, edges and faces
+  int nV, nE, nF, nP;   // number of vertices, edges, faces and piramides
   ArrayList<PVector> positions = new ArrayList<PVector>();
   ArrayList<Face> faces = new ArrayList<Face>();
   boolean[][] incidenceVF = new boolean[nVmax][nFmax]; // true iff v is in f 
   boolean[][] adjacency = new boolean[nVmax][nVmax]; // true iff v1 ~ v2 
+  ArrayList<IntList> pyramids = new ArrayList<IntList>();
 
   void drawSurface() {
     int i;
@@ -99,6 +101,8 @@ class Surface {
           this.nV = int(keywords[2]);
         } else if (keywords[1].equals("face")) {
           this.nF = int(keywords[2]);
+        } else if(keywords[1].equals("pyramid")) {
+          this.nP = int(keywords[2]);
         }
       } else if (keywords[0].equals("end_header")) {
         end_header = true;
@@ -134,11 +138,25 @@ class Surface {
       this.faces.add(f);
       i++;
     }
+    
+    // pyramid's indexes 
+    for (int j=0; j< this.nP; j++) {  // j is the pyramid index
+      String[] keywords = split(lines[i], ' ');
+      IntList indexes = new IntList();
+      int pyramidSize = 4;
+      for (int k = 0; k < pyramidSize; k++) {
+        int vIndex = int(keywords[k]);
+        indexes.append(vIndex);
+      }
+      pyramids.add(indexes); 
+      i++;
+    }
+    //println(pyramids);
   }
   
   IntList getNeighbours(int vertex) {
     IntList neighbours = new IntList();
-    for (int i = 0; i < nVmax; ++i) {
+    for (int i = 0; i < nV; ++i) {
       if (adjacency[vertex][i]) {
          neighbours.append(i); 
       }
@@ -178,6 +196,32 @@ class Surface {
       }
     }
     return orderedNeighbours;
+  }
+  
+  PVector gravityCenter(int vertex) {
+    IntList neighbours = getNeighbours(vertex);
+    PVector gc = new PVector();
+    for(int i = 0; i < neighbours.size(); i++) {
+        gc.add(positions.get(neighbours.get(i)));
+    }
+    if(neighbours.size() == 0) {
+      println("No neigbours. Impossible!!!");
+      return new PVector();
+    }
+    return gc.div(neighbours.size());
+  }
+  
+  void harmonicFlow() {
+    float tau = 0.001;
+    PVector flow = new PVector();
+    PVector p = new PVector();
+    PVector q = new PVector();
+    for(int i = 0; i < nV; i++) {
+      p = positions.get(i);
+      q = gravityCenter(i);
+      flow = PVector.add(p, PVector.mult(PVector.sub(q, p), tau));
+      positions.set(i, new PVector(flow.x, flow.y, flow.z));
+    }
   }
 }
 
