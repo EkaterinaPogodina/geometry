@@ -183,6 +183,10 @@ class Surface {
     return orderedNeighbours;
   }
   
+  
+  /*
+    Function calculates gravity center of vertex neighbours
+  */
   PVector gravityCenter(int vertex) {
     IntList neighbours = getNeighbours(vertex);
     PVector gc = new PVector();
@@ -202,8 +206,11 @@ class Surface {
     return(g.div(n));
   }
   
+  /*
+    function that calculates flow
+  */
   void harmonicFlow() {
-    float tau = 0.001;
+    float tau = 0.001; // coefficient of flow
     PVector flow = new PVector();
     PVector p = new PVector();
     PVector q = new PVector();
@@ -216,6 +223,9 @@ class Surface {
     }
   }
   
+  /*
+    Function calculates Face area
+  */
   float faceArea(Face f, PVector N) {
       PVector sumV = new PVector();
       PVector cross =  new PVector();
@@ -230,9 +240,13 @@ class Surface {
       return PVector.dot(N, sumV) / 2;
   }
   
+  
+  /*
+    function that calculates volume of polyhedron as sum over all (triangular) faces (pqr) of (1/6) det(p,q,r)
+  */
   float calcVolume() {
     float vol = 0;
-    for (int i = 0; i < nF; ++i) {
+    for (int i = 0; i < nF; ++i) { // over all faces
       Face f = faces.get(i);
       PVector v0 = positions.get(f.vertices.get(0));
       PVector v1 = positions.get(f.vertices.get(1));
@@ -241,7 +255,7 @@ class Surface {
       PVector q = PVector.sub(v2, v0);
       PVector cross =  new PVector();
       PVector.cross(p, q, cross);
-      PVector N = PVector.div(cross, l2Norm(cross));
+      PVector N = PVector.div(cross, l2Norm(cross)); // Normal vector
       
       vol += PVector.dot(v0, N) * faceArea(f, N);
     }
@@ -259,6 +273,9 @@ class Surface {
 
 //////   SUBS
 
+/*
+  calculates l2-norm
+*/
 float l2Norm(PVector v) {
   return sqrt(v.x*v.x + v.y*v.y + v.z*v.z);
 }
