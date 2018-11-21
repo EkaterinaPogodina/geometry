@@ -35,9 +35,7 @@ void draw() {
   line(0, 0, 0, 0, 0, width/2);
 
   S.drawSurface();
-  //println(S.getOrderedNeighbours(0));
   S.harmonicFlow();
-
 }
 
 void mouseWheel(MouseEvent event) {  // for zooming in and out
@@ -223,6 +221,22 @@ class Surface {
       positions.set(i, new PVector(flow.x, flow.y, flow.z));
     }
   }
+  
+  float calcVolume() {
+    float vol = 0;
+    for (int i = 0; i < pyramids.size(); ++i) {
+      PVector v0 = positions.get(pyramids.get(i).get(0));
+      PVector v1 = positions.get(pyramids.get(i).get(1));
+      PVector v2 = positions.get(pyramids.get(i).get(2));
+      PVector v3 = positions.get(pyramids.get(i).get(3));
+      PVector p = PVector.sub(v1, v0);
+      PVector q = PVector.sub(v2, v0);
+      PVector r = PVector.sub(v3, v0);
+      println(Volume(p, q, r));
+      vol += Volume(p, q, r);
+    }
+    return vol;
+  }
 }
 
 //////   SUBS
@@ -256,5 +270,5 @@ void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
 float Volume(PVector p, PVector q, PVector r) {
   PVector cross =  new PVector();
   PVector.cross(q, r, cross);
-  return PVector.dot(p, cross);
+  return PVector.dot(p, cross) / 6;
 }
