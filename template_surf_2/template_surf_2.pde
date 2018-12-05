@@ -397,7 +397,7 @@ class Surface {
     Do priori renormalized mean curvature flow
   */
   ArrayList<PVector> RMC() {  // renormalized mean curvature
-    ArrayList<PVector> H = harmonic('p');//CotanVector();
+    ArrayList<PVector> H = CotanVector();//CotanVector();
     ArrayList<PVector> gV = volumeGrad();
     float lambda = - ndot(H, gV) / ndot(gV, gV);
     return(nsum(H, nmult(gV, lambda)));
