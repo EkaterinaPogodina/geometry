@@ -330,8 +330,31 @@ class Surface {
     return(result);
   }
   
-  void CotanVector() {
-      
+  ArrayList<PVector> CotanVector() {
+    ArrayList<PVector> result = new ArrayList<PVector>();
+    
+    
+    for (int p=0; p < this.nV; p++) {
+      PVector Vp = new PVector(0, 0, 0);
+
+      IntList neighbors = orientedNeighbors(p);
+      int n = neighbors.size();
+      for (int q = 0; q < n; q++) {
+        PVector cur = this.positions.get(q);
+        PVector next = this.positions.get((q + 1) % n);
+        PVector prev = this.positions.get((q - 1 + n) % n);
+        PVector point = this.positions.get(q);
+    
+        PVector pq = PVector.sub(cur, point);
+        float psi1 = 1/ tan(arcAngle(pq, PVector.sub(next, cur)));
+        float psi2 = 1 / tan(arcAngle(PVector.sub(prev, cur), pq));
+    
+        Vp.add(pq.mult(psi1 + psi2));
+      }
+      result.add(Vp);
+    }
+ 
+    return result;
   }
 }
 
@@ -360,4 +383,26 @@ void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
     vertex(p.x, p.y, p.z);
   }
   endShape();
+}
+
+float arcAngle(PVector v1, PVector v2) {
+  float r = atan2(v2.y, v2.x) - atan2(v1.y, v1.x);
+  if (r<-PI) {
+    r += 2*PI;
+  }
+  if (r>PI) {
+    r -= 2*PI;
+  }
+  return(r);
+}
+
+float arcAngle(PVector v1, PVector v2) {
+  float r = atan2(v2.y, v2.x) - atan2(v1.y, v1.x);
+  if (r<-PI) {
+    r += 2*PI;
+  }
+  if (r>PI) {
+    r -= 2*PI;
+  }
+  return(r);
 }
