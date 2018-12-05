@@ -43,7 +43,7 @@ int timeBetweenVertices = 500; // ms
 boolean flow = false;
 float tau = 0.05;
 char type; // flow type
-boolean scalingVolume = true;
+boolean scalingVolume = false;
 
 void setup() {
   size(500, 500, P3D);
@@ -84,14 +84,15 @@ void draw() {
       break;
     case 'q':
       S.flow(S.CotanVector(), tau);
-      //break;
+      break;
     case 't':
-      S.RMC();
-      //break;
+      S.flow(S.RMC(), tau);
+      break;
     default:
       S.flow(S.harmonic(type), tau);
       break;
     }
+    //scalingVolume=false;
     if (scalingVolume) S.homothety(S.centroid(),pow(volBefore/S.volume(),1/3.0));
   }
   //currentVertex = (currentVertex +1) %S.nV;
@@ -391,10 +392,10 @@ class Surface {
       PVector grad = new PVector(); // grad at point p
       PVector pVect = positions.get(p);
       PVector cross = new PVector();
-      int n = neighbours.size() - 1; // number of neighbours
+      int n = neighbours.size(); // number of neighbours
       
       for(int i = 0; i < n; i++) {
-        PVector.cross(PVector.sub(positions.get(i), pVect), PVector.sub(positions.get((i + 1) % n), pVect), cross);
+        PVector.cross(PVector.sub(positions.get(neighbours.get(i)), pVect), PVector.sub(positions.get(neighbours.get((i + 1) % n)), pVect), cross);
         grad.add(cross);
       }
       
@@ -408,7 +409,7 @@ class Surface {
     Do priori renormalized mean curvature flow
   */
   ArrayList<PVector> RMC() {  // renormalized mean curvature
-    ArrayList<PVector> H = CotanVector();
+    ArrayList<PVector> H = harmonic('p');//CotanVector();
     ArrayList<PVector> gV = volumeGrad();
     float lambda = - ndot(H, gV) / ndot(gV, gV);
     return(nsum(H, nmult(gV, lambda)));
