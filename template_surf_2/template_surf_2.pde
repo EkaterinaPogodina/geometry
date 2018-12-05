@@ -356,6 +356,17 @@ class Surface {
  
     return result;
   }
+  
+  
+  float volumeGrad(int p) {
+    IntList neighbours = orientedNeighbors(p);
+    
+    float grad = 0;
+    for(int i = 0; i < neighbours.size(); i++) {
+      
+    }
+  }
+  return grad / 6;
 }
 
 //////   SUBS
