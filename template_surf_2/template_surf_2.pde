@@ -43,6 +43,13 @@ void setup() {
   S = new Surface("mug.ply");  // file in 'data' subfolder
   //S = new Surface("cube.ply");  // file in 'data' subfolder
 
+  for (int p=0; p < S.nV; p++) {
+     //println("p", p, "neighbors", S.incidenceVF[p][0], "next", S.faces.get(0).nextVertex(p));
+     IntList neighbors = S.orientedNeighbors(p);
+     println("p=", p, neighbors);
+     println("volGrad= ", S.volumeGrad(p));
+  }
+
   /*
   for (int p=0; p < S.nV; p++) {
    //println("p", p, "neighbors", S.incidenceVF[p][0], "next", S.faces.get(0).nextVertex(p));
@@ -330,9 +337,9 @@ class Surface {
     return(result);
   }
 
+
   ArrayList<PVector> CotanVector() {
     ArrayList<PVector> result = new ArrayList<PVector>();
-    
     
     for (int p=0; p < this.nV; p++) {
       PVector Vp = new PVector(0, 0, 0);
@@ -357,16 +364,37 @@ class Surface {
     return result;
   }
   
-  
-  float volumeGrad(int p) {
-    IntList neighbours = orientedNeighbors(p);
+  /*
+    Calculates the volume gradient for point p
+  */
+  ArrayList<PVector> volumeGrad() {
+    ArrayList<PVector> result = new ArrayList<PVector>();
     
-    float grad = 0;
-    for(int i = 0; i < neighbours.size(); i++) {
+    for (int p=0; p < this.nV; p++) {
+
+      IntList neighbours = orientedNeighbors(p);
+      PVector grad = new PVector();
+      PVector pVect = positions.get(p);
+      PVector cross = new PVector();
+      int n = neighbours.size() - 1; // number of neighbours
       
+      for(int i = 0; i < n; i++) {
+        PVector.cross(PVector.sub(positions.get(i), pVect), PVector.sub(positions.get((i + 1) % n), pVect), cross);
+        grad.add(cross);
+      }
+      
+      result.add(grad.div(6));
     }
+ 
+    return result;
   }
-  return grad / 6;
+  
+  ArrayList<PVector> RMC() {  // renormalized mean curvature
+    ArrayList<PVector> H = CotanVector();
+    ArrayList<PVector> gV = volumeGrad();
+    float lambda = - ndot(H, gV) / ndot(gV, gV);
+    return(nsum(H, nmult(gV, lambda)));
+  }
 }
 
 //////   SUBS
@@ -405,4 +433,28 @@ float arcAngle(PVector v1, PVector v2) {
     r -= 2*PI;
   }
   return(r);
+}
+
+float ndot(ArrayList<PVector> U, ArrayList<PVector> V) {  // scalar product between n-vectors
+  float s = 0;
+  for (int i=0; i<min(U.size(), V.size()); i++) {
+    s += PVector.dot(U.get(i), V.get(i));
+  }
+  return(s);
+}
+
+ArrayList<PVector> nsum(ArrayList<PVector> U, ArrayList<PVector> V) {  // addition between 2 n-vectors
+  ArrayList<PVector> W = new ArrayList<PVector>();
+  for (int i=0; i<min(U.size(), V.size()); i++) {
+    W.add(PVector.add(U.get(i), V.get(i)));
+  }
+  return(W);
+}
+
+ArrayList<PVector> nmult(ArrayList<PVector> U, float lambda) {  // multiplication of n-vector by a float
+  ArrayList<PVector> W = new ArrayList<PVector>();
+  for (int i=0; i<U.size(); i++) {
+    W.add(PVector.mult(U.get(i), lambda));
+  }
+  return(W);
 }
