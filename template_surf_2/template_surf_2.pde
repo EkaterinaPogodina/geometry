@@ -340,7 +340,6 @@ class Surface {
   ArrayList<PVector> CotanVector() {
     ArrayList<PVector> result = new ArrayList<PVector>();
     
-    
     for (int p=0; p < this.nV; p++) {
       PVector Vp = new PVector(0, 0, 0);
 
@@ -354,9 +353,9 @@ class Surface {
     
         PVector pq = PVector.sub(cur, point);
         float psi1 = 1/ tan(arcAngle(pq, PVector.sub(next, cur)));
-        float psi2 = 1 / tan(arcAngle(PVector.sub(prev, cur), pq));
-    
-        Vp.add(pq.mult(psi1 + psi2));
+        float psi2 = 1 / tan(arcAngle(PVector.sub(cur, prev), pq));
+        
+        Vp.add(PVector.mult(pq, psi2 + psi1));
       }
       result.add(Vp);
     }
