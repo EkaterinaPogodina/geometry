@@ -20,7 +20,15 @@ Managing polyhedral surfaces using list based discrete surface representation
  - harmonic (combinatorial and probabilistic) vector field
  - to start the flow : 'c' = combinatorial and 'p' = probabilistic
  
- Pascal Romon 2018 
+ Authors: Elena Pavlova and Ekaterina Pogodina
+  v3
+  - We write the gradient of the volume gradV at each vertex
+  - We write the a priori RMCF, where H is first projected orthogonnally to gradV 
+  (* we used RMC function for calculating flow
+   * nmult, nsum and ndot function for calculating easy operations with arrays of PVectors 
+   from hw5)
+   To run RMC flow press 't' key
+
  */
 
 
@@ -375,12 +383,12 @@ class Surface {
     Calculates the volume gradient for point p
   */
   ArrayList<PVector> volumeGrad() {
-    ArrayList<PVector> result = new ArrayList<PVector>();
+    ArrayList<PVector> result = new ArrayList<PVector>(); // result vector of volume gradient
     
     for (int p=0; p < this.nV; p++) {
 
       IntList neighbours = orientedNeighbors(p);
-      PVector grad = new PVector();
+      PVector grad = new PVector(); // grad at point p
       PVector pVect = positions.get(p);
       PVector cross = new PVector();
       int n = neighbours.size() - 1; // number of neighbours
@@ -396,6 +404,9 @@ class Surface {
     return result;
   }
   
+  /*
+    Do priori renormalized mean curvature flow
+  */
   ArrayList<PVector> RMC() {  // renormalized mean curvature
     ArrayList<PVector> H = CotanVector();
     ArrayList<PVector> gV = volumeGrad();
