@@ -348,20 +348,30 @@ class Surface {
         PVector prev = this.positions.get(neighbors.get((q - 1 + n) % n));
         PVector point = this.positions.get(p);
     
-        PVector pq = PVector.sub(cur, point);
-        float psi1 = tan(arcAngle(PVector.sub(next, point), PVector.sub(cur, next)));
-        float psi2 = tan(arcAngle(PVector.sub(prev, point), PVector.sub(cur, prev)));
+        PVector pq = PVector.sub(point, cur);
+        float psi1 = tan(PVector.angleBetween(PVector.sub(next, point), PVector.sub(next, cur)));
+        float psi2 = tan(PVector.angleBetween(PVector.sub(prev, point), PVector.sub(prev, cur)));
         
         if (abs(psi1) > 0.001)
           psi1 = 1/ psi1;
           
         if (abs(psi2) > 0.001)
           psi2 = 1/ psi2;
+          
+         if (q == 0) {
+            psi2 = 0;
+            psi1 *= 2;
+            
+         }
+         
+         if (q == n - 1) {
+           psi1 = 0;
+           psi2 *= 2;
+         }
         
-        //println(psi1);
-        
-        Vp.add(PVector.mult(pq, 1));
+        Vp.add(PVector.mult(pq, 0.5*(psi2 + psi1)));
       }
+      
       result.add(Vp);
     }
  
