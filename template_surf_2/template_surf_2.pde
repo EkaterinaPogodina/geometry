@@ -1,36 +1,15 @@
 /*
-Managing polyhedral surfaces using list based discrete surface representation 
- 
- v1
- - defines Face and Surface class
- - imports PLY files 
- - draws a surface by listing all faces and calling drawFace 
- - drawFace draws a face using Processing3D builtin routines (Shape)
- - mousewheel defines camera zoom, mouse motion defines camera rotation
- 
- v2
- - add nextVertex and previousVertex method in Face class
- - vertexDegree method in Surface class
- - orientedNeighbors to find the oriented list of neighbors
- - visualizeNeighbors runs through all pointsvertices and draws the list of neighbors, ordered
- - volume method ; volume is preserved by scaling if scalingVolume == true
- - flow method for arbitrary vector field, with timestep
- - centroid (center of mass)
- - homothety
- - harmonic (combinatorial and probabilistic) vector field
- - to start the flow : 'c' = combinatorial and 'p' = probabilistic
- 
- Authors: Elena Pavlova and Ekaterina Pogodina
+Authors: Elena Pavlova and Ekaterina Pogodina
   v3
-  - We write the gradient of the volume gradV at each vertex
-  - We write the a priori RMCF, where H is first projected orthogonnally to gradV 
+  - We write the Cotan Flow (CotanVectors() method)
+  - We write the gradient of the volume gradV at each vertex (volumeGrad() method)
+  - We write the a priori RMC() method, where flow H (cotan) is first projected orthogonnally to gradV 
   (* we used RMC function for calculating flow
-   * nmult, nsum and ndot function for calculating easy operations with arrays of PVectors 
-   from hw5)
-   To run RMC flow press 't' key
+   * nmult, nsum and ndot functions for calculating easy operations with arrays of PVectors 
+   it was taken from hw5)
+   To run RMC flow (cotan) press 't' key
 
  */
-
 
 int nVmax = 4000;
 int nFmax = 4000;
@@ -84,10 +63,10 @@ void draw() {
       break;
     case 'q':
       S.flow(S.CotanVector(), tau);
-      //break;
+      break;
     case 't':
-      S.RMC();
-      //break;
+      S.flow(S.RMC(), tau);
+      break;
     default:
       S.flow(S.harmonic(type), tau);
       break;
@@ -127,6 +106,7 @@ void keyReleased() {
   if (key == 't') {
     flow = true;
     type = key;
+    scalingVolume = false;
   }
 }
 
@@ -362,16 +342,24 @@ class Surface {
       IntList neighbors = orientedNeighbors(p);
       int n = neighbors.size();
       for (int q = 0; q < n; q++) {
-        PVector cur = this.positions.get(q);
-        PVector next = this.positions.get((q + 1) % n);
-        PVector prev = this.positions.get((q - 1 + n) % n);
-        PVector point = this.positions.get(q);
+        PVector cur = this.positions.get(neighbors.get(q));
+        PVector next = this.positions.get(neighbors.get((q + 1) % n));
+        PVector prev = this.positions.get(neighbors.get((q - 1 + n) % n));
+        PVector point = this.positions.get(p);
     
         PVector pq = PVector.sub(cur, point);
-        float psi1 = 1/ tan(arcAngle(pq, PVector.sub(next, cur)));
-        float psi2 = 1 / tan(arcAngle(PVector.sub(cur, prev), pq));
+        float psi1 = tan(arcAngle(PVector.sub(next, point), PVector.sub(cur, next)));
+        float psi2 = tan(arcAngle(PVector.sub(prev, point), PVector.sub(cur, prev)));
         
-        Vp.add(PVector.mult(pq, psi2 + psi1));
+        if (abs(psi1) > 0.001)
+          psi1 = 1/ psi1;
+          
+        if (abs(psi2) > 0.001)
+          psi2 = 1/ psi2;
+        
+        //println(psi1);
+        
+        Vp.add(PVector.mult(pq, 1));
       }
       result.add(Vp);
     }
@@ -391,10 +379,10 @@ class Surface {
       PVector grad = new PVector(); // grad at point p
       PVector pVect = positions.get(p);
       PVector cross = new PVector();
-      int n = neighbours.size() - 1; // number of neighbours
+      int n = neighbours.size(); // number of neighbours
       
       for(int i = 0; i < n; i++) {
-        PVector.cross(PVector.sub(positions.get(i), pVect), PVector.sub(positions.get((i + 1) % n), pVect), cross);
+        PVector.cross(PVector.sub(positions.get(neighbours.get(i)), pVect), PVector.sub(positions.get(neighbours.get((i + 1) % n)), pVect), cross);
         grad.add(cross);
       }
       
