@@ -43,13 +43,6 @@ void setup() {
   S = new Surface("mug.ply");  // file in 'data' subfolder
   //S = new Surface("cube.ply");  // file in 'data' subfolder
 
-  for (int p=0; p < S.nV; p++) {
-     //println("p", p, "neighbors", S.incidenceVF[p][0], "next", S.faces.get(0).nextVertex(p));
-     IntList neighbors = S.orientedNeighbors(p);
-     println("p=", p, neighbors);
-     println("volGrad= ", S.volumeGrad(p));
-  }
-
   /*
   for (int p=0; p < S.nV; p++) {
    //println("p", p, "neighbors", S.incidenceVF[p][0], "next", S.faces.get(0).nextVertex(p));
@@ -81,6 +74,12 @@ void draw() {
     case 'm': 
       //S.flow(S.MCF(), tau);
       break;
+    case 'q':
+      S.flow(S.CotanVector(), tau);
+      //break;
+    case 't':
+      S.RMC();
+      //break;
     default:
       S.flow(S.harmonic(type), tau);
       break;
@@ -109,6 +108,15 @@ void keyReleased() {
     type = key;
   }
   if (key == 'm') { // MCF
+    flow = true;
+    type = key;
+  }
+  
+  if (key == 'q') {
+    flow = true;
+    type = key;
+  }
+  if (key == 't') {
     flow = true;
     type = key;
   }
@@ -337,7 +345,6 @@ class Surface {
     return(result);
   }
 
-
   ArrayList<PVector> CotanVector() {
     ArrayList<PVector> result = new ArrayList<PVector>();
     
@@ -354,16 +361,16 @@ class Surface {
     
         PVector pq = PVector.sub(cur, point);
         float psi1 = 1/ tan(arcAngle(pq, PVector.sub(next, cur)));
-        float psi2 = 1 / tan(arcAngle(PVector.sub(prev, cur), pq));
-    
-        Vp.add(pq.mult(psi1 + psi2));
+        float psi2 = 1 / tan(arcAngle(PVector.sub(cur, prev), pq));
+        
+        Vp.add(PVector.mult(pq, psi2 + psi1));
       }
       result.add(Vp);
     }
  
     return result;
   }
-  
+
   /*
     Calculates the volume gradient for point p
   */
@@ -395,6 +402,7 @@ class Surface {
     float lambda = - ndot(H, gV) / ndot(gV, gV);
     return(nsum(H, nmult(gV, lambda)));
   }
+
 }
 
 //////   SUBS
