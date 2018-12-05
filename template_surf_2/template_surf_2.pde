@@ -74,6 +74,8 @@ void draw() {
     case 'm': 
       //S.flow(S.MCF(), tau);
       break;
+    case 'q':
+      S.flow(S.CotanVector(), tau);
     default:
       S.flow(S.harmonic(type), tau);
       break;
@@ -102,6 +104,11 @@ void keyReleased() {
     type = key;
   }
   if (key == 'm') { // MCF
+    flow = true;
+    type = key;
+  }
+  
+  if (key == 'q') {
     flow = true;
     type = key;
   }
@@ -358,15 +365,15 @@ class Surface {
   }
   
   
-  float volumeGrad(int p) {
-    IntList neighbours = orientedNeighbors(p);
+  //float volumeGrad(int p) {
+  //  IntList neighbours = orientedNeighbors(p);
     
-    float grad = 0;
-    for(int i = 0; i < neighbours.size(); i++) {
+  //  float grad = 0;
+  //  for(int i = 0; i < neighbours.size(); i++) {
       
-    }
-  }
-  return grad / 6;
+  //  }
+  //}
+  //return grad / 6;
 }
 
 //////   SUBS
