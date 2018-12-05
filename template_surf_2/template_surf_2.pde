@@ -40,7 +40,7 @@ boolean scalingVolume = true;
 void setup() {
   size(500, 500, P3D);
   frameRate(25);
-  S = new Surface("sphere10-20.ply");  // file in 'data' subfolder
+  S = new Surface("mug.ply");  // file in 'data' subfolder
   //S = new Surface("cube.ply");  // file in 'data' subfolder
 
   /*
@@ -305,10 +305,10 @@ class Surface {
       this.positions.get(p).add(V.get(p).mult(timestep));
   }
   
-  PVector centroid() {    // center of mass
+  PVector centroid() {    // center of mass of the (vertices of the) surface
     PVector g = new PVector(0,0,0);
     for (int p=0; p < this.nV; p++) g.add(this.positions.get(p));
-    return(g);
+    return(g.div(this.nV));
   }
   
   void homothety(PVector center, float factor) {
@@ -329,7 +329,7 @@ class Surface {
     }
     return(result);
   }
-  
+
   ArrayList<PVector> CotanVector() {
     ArrayList<PVector> result = new ArrayList<PVector>();
     
@@ -383,17 +383,6 @@ void drawFace(Surface S, int faceIndex, int theStroke, int theFill) {
     vertex(p.x, p.y, p.z);
   }
   endShape();
-}
-
-float arcAngle(PVector v1, PVector v2) {
-  float r = atan2(v2.y, v2.x) - atan2(v1.y, v1.x);
-  if (r<-PI) {
-    r += 2*PI;
-  }
-  if (r>PI) {
-    r -= 2*PI;
-  }
-  return(r);
 }
 
 float arcAngle(PVector v1, PVector v2) {
